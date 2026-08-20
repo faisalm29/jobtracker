@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@jobtracker/web",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -12,7 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@workspace/ui": "workspace:*",
+    "@jobtracker/ui": "workspace:*",
+    "@tanstack/react-router": "^1.170.31",
+    "@tanstack/react-router-devtools": "^1.167.1",
     "lucide-react": "^1.33.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
@@ -20,6 +22,7 @@
   "devDependencies": {
     "@eslint/js": "^10",
     "@tailwindcss/vite": "^4",
+    "@tanstack/router-plugin": "^1.168.34",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
