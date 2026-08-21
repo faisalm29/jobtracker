@@ -3,9 +3,18 @@
   "name": "jobtracker-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-20",
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jobtracker",
+      "database_id": "6764a437-7f2e-4bba-b35b-32f02330e525",
+      "migrations_dir": "./src/db/migrations",
+    },
+  ],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env",
+  ],
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
