@@ -1,6 +1,11 @@
 {
   "name": "@jobtracker/api",
   "type": "module",
+  "exports": {
+    "./lib/register-routes": {
+      "types": "./src/lib/register-routes.ts"
+    }
+  },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",

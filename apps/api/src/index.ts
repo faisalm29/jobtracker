@@ -1,9 +1,10 @@
-import { Hono } from 'hono'
+import { registerRoutes } from "./lib/register-routes"
+import createApp from "./lib/create-app"
 
-const app = new Hono()
+const app = registerRoutes(createApp())
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+// app.get('/', (c) => {
+//   return c.text('Hello Hono!')
+// })
 
 export default app
