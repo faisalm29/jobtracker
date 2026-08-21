@@ -1,5 +1,6 @@
 {
   "name": "@jobtracker/api",
+  "version": "1.0.0",
   "type": "module",
   "exports": {
     "./lib/register-routes": {

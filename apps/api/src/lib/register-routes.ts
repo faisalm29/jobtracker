@@ -1,9 +1,10 @@
 import { AppOpenAPI } from "./types"
-import applictions from "../routes/applications.index"
+import applictions from "../routes/applications/applications.index"
+import index from "../routes/index.routes"
 import createRouter from "./create-router"
 
 export const registerRoutes = (app: AppOpenAPI) => {
-  return app.route("/", applictions)
+  return app.route("/", index).route("/applications", applictions)
 }
 
 // stand alone router type used for api client
