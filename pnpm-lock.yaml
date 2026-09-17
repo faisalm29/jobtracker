@@ -23,7 +23,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@workspace/ui':
+      '@jobtracker/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:
