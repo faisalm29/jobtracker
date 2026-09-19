@@ -3,6 +3,14 @@
   "name": "jobtrackerapi",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-17",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "faisalownedjobtracker",
+      "database_id": "5e8e35a4-83dd-450f-a6cd-d628d6292211",
+      "migrations_dir": "./src/db/migrations",
+    },
+  ],
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
