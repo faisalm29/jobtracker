@@ -47,13 +47,8 @@ export const JOB_TYPES = [
 export const WORKPLACE_TYPES = ["remote", "hybrid", "onsite"] as const;
 
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
-
 export type StageStatus = (typeof STAGE_STATUSES)[number];
-
 export type StageType = (typeof STAGE_TYPES)[number];
-
 export type JobType = (typeof JOB_TYPES)[number];
-
 export type WorkplaceType = (typeof WORKPLACE_TYPES)[number];
-
 export type SourceCategory = (typeof SOURCE_CATEGORIES)[number];

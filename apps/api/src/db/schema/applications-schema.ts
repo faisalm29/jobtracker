@@ -10,7 +10,7 @@ import {
   STAGE_STATUSES,
   STAGE_TYPES,
   WORKPLACE_TYPES,
-} from "@/constants/applications";
+} from "@jobtracker/constants";
 
 export const applications = sqliteTable(
   "applications",

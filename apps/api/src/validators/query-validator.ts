@@ -4,7 +4,7 @@ import {
   JOB_TYPES,
   SOURCE_CATEGORIES,
   WORKPLACE_TYPES,
-} from "@/constants/applications";
+} from "@jobtracker/constants";
 
 export const getApplicationsQuerySchema = z.object({
   // SEARCH & FILTER

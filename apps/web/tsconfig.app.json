@@ -23,7 +23,9 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@jobtracker/ui/*": ["../../packages/ui/src/*"]
+      "@jobtracker/ui/*": ["../../packages/ui/src/*"],
+      "@jobtracker/constants": ["../../packages/constants/src/index.ts"],
+      "@jobtracker/constants/*": ["../../packages/constants/src/*"]
     }
   },
   "include": ["src"]
