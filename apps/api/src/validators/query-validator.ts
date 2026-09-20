@@ -1,3 +1,4 @@
+import { selectApplicationSchema } from "@/db/schema";
 import { z } from "@hono/zod-openapi";
 import {
   APPLICATION_STATUSES,
@@ -32,9 +33,14 @@ export const getApplicationsQuerySchema = z.object({
     description: "Filter by workplace arrangement",
     example: "remote",
   }),
-  includeDeleted: z.coerce.boolean().optional().default(false).openapi({
-    description: "Include soft-deleted applications",
-  }),
+  includeDeleted: z
+    .preprocess((val: string | boolean | undefined) => {
+      if (typeof val === "string") return val === "true";
+      return val;
+    }, z.boolean().optional().default(false))
+    .openapi({
+      description: "Include soft-deleted applications",
+    }),
 
   // SORTING
   sortBy: z
@@ -75,4 +81,21 @@ export const getApplicationsQuerySchema = z.object({
     }),
 });
 
+export const paginationMetaSchema = z.object({
+  page: z.number().openapi({ example: 1 }),
+  limit: z.number().openapi({ example: 1 }),
+  totalItems: z.number().openapi({ example: 45 }),
+  totalPages: z.number().openapi({ example: 3 }),
+  hasNextPage: z.boolean().openapi({ example: true }),
+  hasPrevPage: z.boolean().openapi({ example: false }),
+});
+
+export const paginatedApplicationsResponseSchema = z.object({
+  data: z.array(selectApplicationSchema),
+  pagination: paginationMetaSchema,
+});
+
 export type GetApplicationsQuery = z.infer<typeof getApplicationsQuerySchema>;
+export type PaginatedApplicationsResponse = z.infer<
+  typeof paginatedApplicationsResponseSchema
+>;
