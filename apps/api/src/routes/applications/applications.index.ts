@@ -1,0 +1,7 @@
+import { createRouter } from "@/lib/create-router";
+import * as routes from "./applications.routes";
+import * as handlers from "./applications.handlers";
+
+const router = createRouter().openapi(routes.create, handlers.create);
+
+export default router;

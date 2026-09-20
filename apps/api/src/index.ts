@@ -1,9 +1,8 @@
-import { Hono } from "hono"
+import createApp from "@/lib/create-app";
+import configureOpenAPI from "@/lib/configure-open-api";
+import { registerRoutes } from "./routes";
 
-const app = new Hono()
+const app = registerRoutes(createApp());
+configureOpenAPI(app);
 
-app.get("/", (c) => {
-  return c.text("Welcome to Jobtracker API!")
-})
-
-export default app
+export default app;

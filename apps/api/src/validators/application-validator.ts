@@ -22,8 +22,9 @@ export const createApplicationBodySchema = insertApplicationSchema
     deletedAt: true,
     statusChangedAt: true,
   })
-  .openapi({
-    description: "Payload for creating a new application",
+  .extend({
+    appliedDate: z.coerce.date().nullish(),
+    deadline: z.coerce.date().nullish(),
   });
 
 // Request body: PATCH /applications/:id
