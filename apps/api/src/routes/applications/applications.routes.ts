@@ -1,4 +1,4 @@
-import { selectApplicationSchema } from "@/db/schema";
+import { insertApplicationSchema, selectApplicationSchema } from "@/db/schema";
 import { createErrorSchema } from "@/lib/create-error-schema";
 import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
@@ -6,6 +6,7 @@ import { jsonContentRequired } from "@/lib/json-content-required";
 import {
   applicationParamsSchema,
   createApplicationBodySchema,
+  updateApplicationBodySchema,
 } from "@/validators/application-validator";
 import {
   getApplicationsQuerySchema,
@@ -95,6 +96,39 @@ export const create = createRoute({
   },
 });
 
+export const patch = createRoute({
+  tags,
+  path: "/{id}",
+  method: "patch",
+  security: [{ Bearer: [] }],
+  request: {
+    params: applicationParamsSchema,
+    body: jsonContentRequired(
+      updateApplicationBodySchema,
+      "Payload for updating the application"
+    ),
+  },
+  responses: {
+    [StatusCodes.OK as 200]: jsonContent(
+      selectApplicationSchema,
+      "The updated application"
+    ),
+    [StatusCodes.NOT_FOUND as 404]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.NOT_FOUND),
+      "Not found error"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(updateApplicationBodySchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
+      createMessageObjectSchema("Unauthorized"),
+      "The unauthorized error"
+    ),
+  },
+});
+
 export type CreateRoute = typeof create;
 export type GetOneRoute = typeof getOne;
 export type ListRoute = typeof list;
+export type PatchRoute = typeof patch;

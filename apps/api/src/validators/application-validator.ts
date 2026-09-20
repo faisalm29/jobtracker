@@ -28,11 +28,8 @@ export const createApplicationBodySchema = insertApplicationSchema
   });
 
 // Request body: PATCH /applications/:id
-export const updateApplicationBodySchema = createApplicationBodySchema
-  .partial()
-  .openapi({
-    description: "Payload for updating an application",
-  });
+export const updateApplicationBodySchema =
+  createApplicationBodySchema.partial();
 
 // Stage validators
 export const createStageBodySchema = insertApplicationStageSchema

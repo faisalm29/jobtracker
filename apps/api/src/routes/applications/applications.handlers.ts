@@ -1,8 +1,13 @@
 import { AppRouteHandler } from "@/lib/types";
-import { CreateRoute, GetOneRoute, ListRoute } from "./applications.routes";
+import {
+  CreateRoute,
+  GetOneRoute,
+  ListRoute,
+  PatchRoute,
+} from "./applications.routes";
 import { getSession } from "@/lib/get-session";
 import { createDb } from "@/db";
-import { applications } from "@/db/schema";
+import { applications, applicationStatusHistory } from "@/db/schema";
 import { and, asc, count, desc, eq, isNull, like, or } from "drizzle-orm";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
@@ -128,4 +133,70 @@ export const create: AppRouteHandler<CreateRoute> = async (c) => {
     .returning();
 
   return c.json(newApplication, 201);
+};
+
+export const patch: AppRouteHandler<PatchRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id } = c.req.valid("param");
+  const updates = c.req.valid("json");
+
+  if (Object.keys(updates).length === 0) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          issues: [
+            {
+              code: "invalid_updates",
+              path: [],
+              message: "No updates provided",
+            },
+          ],
+          name: "ZodError",
+        },
+      },
+      StatusCodes.UNPROCESSABLE_ENTITY
+    );
+  }
+
+  const existing = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.userId, user.id),
+      eq(applications.id, id),
+      isNull(applications.deletedAt)
+    ),
+  });
+
+  if (!existing) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  const hasStatusChanged = updates.status && updates.status !== existing.status;
+
+  if (hasStatusChanged) {
+    await db.insert(applicationStatusHistory).values({
+      id: crypto.randomUUID(),
+      applicationId: id,
+      fromStatus: existing.status,
+      toStatus: updates.status!,
+      changedAt: new Date(),
+    });
+  }
+
+  const [updatedApplication] = await db
+    .update(applications)
+    .set({
+      ...updates,
+      ...(hasStatusChanged ? { statusChangedAt: new Date() } : {}),
+    })
+    .where(and(eq(applications.id, id), eq(applications.userId, user.id)))
+    .returning();
+
+  return c.json(updatedApplication, 200);
 };
