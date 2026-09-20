@@ -1,9 +1,10 @@
 import { AppRouteHandler } from "@/lib/types";
-import { CreateRoute, ListRoute } from "./applications.routes";
+import { CreateRoute, GetOneRoute, ListRoute } from "./applications.routes";
 import { getSession } from "@/lib/get-session";
 import { createDb } from "@/db";
 import { applications } from "@/db/schema";
 import { and, asc, count, desc, eq, isNull, like, or } from "drizzle-orm";
+import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 export const list: AppRouteHandler<ListRoute> = async (c) => {
   const db = createDb(c.env);
@@ -85,6 +86,31 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
     },
     200
   );
+};
+
+export const getOne: AppRouteHandler<GetOneRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id } = c.req.valid("param");
+
+  const result = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.userId, user.id),
+      eq(applications.id, id),
+      isNull(applications.deletedAt)
+    ),
+  });
+
+  if (!result) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  return c.json(result, 200);
 };
 
 export const create: AppRouteHandler<CreateRoute> = async (c) => {
