@@ -101,7 +101,7 @@ export const applicationsRelations = relations(
       fields: [applications.userId],
       references: [users.id],
     }),
-    history: many(applicationStatusHistory),
+    statusHistory: many(applicationStatusHistory),
     stages: many(applicationsStages),
   })
 );
@@ -136,6 +136,10 @@ export const selectApplicationStageSchema =
 export const insertApplicationStageSchema =
   createInsertSchema(applicationsStages);
 
+export const selectApplicationStatusHistorySchema = createSelectSchema(
+  applicationStatusHistory
+);
+
 export type Application = z.infer<typeof selectApplicationSchema>;
 
 export type NewApplication = z.infer<typeof insertApplicationSchema>;
@@ -143,3 +147,7 @@ export type NewApplication = z.infer<typeof insertApplicationSchema>;
 export type ApplicationStage = z.infer<typeof selectApplicationStageSchema>;
 
 export type NewApplicationStage = z.infer<typeof insertApplicationStageSchema>;
+
+export type ApplicationStatusHistory = z.infer<
+  typeof selectApplicationStatusHistorySchema
+>;

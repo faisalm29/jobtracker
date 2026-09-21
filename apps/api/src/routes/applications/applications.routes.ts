@@ -4,6 +4,7 @@ import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
 import { jsonContentRequired } from "@/lib/json-content-required";
 import {
+  applicationDetailResponseSchema,
   applicationParamsSchema,
   createApplicationBodySchema,
   updateApplicationBodySchema,
@@ -51,8 +52,8 @@ export const getOne = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      selectApplicationSchema,
-      "The returned application"
+      applicationDetailResponseSchema,
+      "The application details with stages and status history"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
       createMessageObjectSchema(ReasonPhrases.NOT_FOUND),

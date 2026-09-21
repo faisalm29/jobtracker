@@ -1,6 +1,9 @@
 import {
   insertApplicationSchema,
   insertApplicationStageSchema,
+  selectApplicationSchema,
+  selectApplicationStageSchema,
+  selectApplicationStatusHistorySchema,
 } from "@/db/schema";
 import { z } from "@hono/zod-openapi";
 
@@ -69,8 +72,17 @@ export const reorderStagesBodySchema = z.object({
     }),
 });
 
+// Response schema for GET /applications/:id
+export const applicationDetailResponseSchema = selectApplicationSchema.extend({
+  stages: z.array(selectApplicationStageSchema),
+  statusHistory: z.array(selectApplicationStatusHistorySchema),
+});
+
 export type CreateApplicationBody = z.infer<typeof createApplicationBodySchema>;
 export type UpdateApplicationBody = z.infer<typeof updateApplicationBodySchema>;
 export type CreateStageBody = z.infer<typeof createStageBodySchema>;
 export type UpdateStageBody = z.infer<typeof updateStageBodySchema>;
 export type ReorderStagesBody = z.infer<typeof reorderStagesBodySchema>;
+export type ApplicationDetailResponse = z.infer<
+  typeof applicationDetailResponseSchema
+>;

@@ -116,6 +116,14 @@ export const getOne: AppRouteHandler<GetOneRoute> = async (c) => {
       eq(applications.id, id),
       isNull(applications.deletedAt)
     ),
+    with: {
+      stages: {
+        orderBy: (stages, { asc }) => [asc(stages.orderIndex)],
+      },
+      statusHistory: {
+        orderBy: (history, { desc }) => [desc(history.changedAt)],
+      },
+    },
   });
 
   if (!result) {
@@ -135,14 +143,26 @@ export const create: AppRouteHandler<CreateRoute> = async (c) => {
   const user = getSession(c).user;
   const reqBody = c.req.valid("json");
 
-  const [newApplication] = await db
-    .insert(applications)
-    .values({
-      ...reqBody,
+  const applicationId = crypto.randomUUID();
+  const initialStatus = reqBody.status ?? "saved";
+
+  const [[newApplication]] = await db.batch([
+    db
+      .insert(applications)
+      .values({
+        ...reqBody,
+        id: applicationId,
+        userId: user.id,
+      })
+      .returning(),
+    db.insert(applicationStatusHistory).values({
       id: crypto.randomUUID(),
-      userId: user.id,
-    })
-    .returning();
+      applicationId,
+      fromStatus: null,
+      toStatus: initialStatus,
+      changedAt: new Date(),
+    }),
+  ]);
 
   return c.json(newApplication, 201);
 };
