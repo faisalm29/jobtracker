@@ -38,6 +38,9 @@ export const createStageBodySchema = insertApplicationStageSchema
     createdAt: true,
     applicationId: true,
   })
+  .extend({
+    scheduledAt: z.coerce.date().nullish(),
+  })
   .openapi({
     description: "Payload for creating a new stage",
   });
