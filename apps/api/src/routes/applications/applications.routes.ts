@@ -64,7 +64,7 @@ export const getOne = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },
@@ -91,7 +91,7 @@ export const create = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },
@@ -123,7 +123,7 @@ export const patch = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },
@@ -150,7 +150,7 @@ export const remove = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },
@@ -178,7 +178,7 @@ export const restore = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },

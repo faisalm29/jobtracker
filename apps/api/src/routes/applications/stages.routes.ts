@@ -101,7 +101,7 @@ export const patchStage = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },
@@ -128,7 +128,7 @@ export const removeStage = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },

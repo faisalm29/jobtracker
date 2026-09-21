@@ -101,7 +101,7 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
         hasPrevPage: query.page > 1,
       },
     },
-    200
+    StatusCodes.OK
   );
 };
 
@@ -135,7 +135,7 @@ export const getOne: AppRouteHandler<GetOneRoute> = async (c) => {
     );
   }
 
-  return c.json(result, 200);
+  return c.json(result, StatusCodes.OK);
 };
 
 export const create: AppRouteHandler<CreateRoute> = async (c) => {
@@ -164,7 +164,7 @@ export const create: AppRouteHandler<CreateRoute> = async (c) => {
     }),
   ]);
 
-  return c.json(newApplication, 201);
+  return c.json(newApplication, StatusCodes.CREATED);
 };
 
 export const patch: AppRouteHandler<PatchRoute> = async (c) => {
@@ -230,7 +230,7 @@ export const patch: AppRouteHandler<PatchRoute> = async (c) => {
     .where(and(eq(applications.id, id), eq(applications.userId, user.id)))
     .returning();
 
-  return c.json(updatedApplication, 200);
+  return c.json(updatedApplication, StatusCodes.OK);
 };
 
 export const remove: AppRouteHandler<RemoveRoute> = async (c) => {
@@ -292,5 +292,5 @@ export const restore: AppRouteHandler<RestoreRoute> = async (c) => {
     );
   }
 
-  return c.json(restoredApplication, 200);
+  return c.json(restoredApplication, StatusCodes.OK);
 };
