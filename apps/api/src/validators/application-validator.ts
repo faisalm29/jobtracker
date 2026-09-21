@@ -53,7 +53,24 @@ export const createStageBodySchema = insertApplicationStageSchema
 
 export const updateStageBodySchema = createStageBodySchema.partial();
 
+export const reorderStagesBodySchema = z.object({
+  stageIds: z
+    .array(z.string())
+    .min(1)
+    .refine((items) => new Set(items).size === items.length, {
+      message: "Stage IDs must be unique",
+    })
+    .openapi({
+      description: "Array of stage IDs in the desired order",
+      example: [
+        "123e4567-e89b-12d3-a456-426614174001",
+        "123e4567-e89b-12d3-a456-426614174002",
+      ],
+    }),
+});
+
 export type CreateApplicationBody = z.infer<typeof createApplicationBodySchema>;
 export type UpdateApplicationBody = z.infer<typeof updateApplicationBodySchema>;
 export type CreateStageBody = z.infer<typeof createStageBodySchema>;
 export type UpdateStageBody = z.infer<typeof updateStageBodySchema>;
+export type ReorderStagesBody = z.infer<typeof reorderStagesBodySchema>;

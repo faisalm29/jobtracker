@@ -6,6 +6,7 @@ import { jsonContentRequired } from "@/lib/json-content-required";
 import {
   applicationParamsSchema,
   createStageBodySchema,
+  reorderStagesBodySchema,
   stageParamsSchema,
   updateStageBodySchema,
 } from "@/validators/application-validator";
@@ -133,7 +134,44 @@ export const removeStage = createRoute({
   },
 });
 
+export const reorderStages = createRoute({
+  tags,
+  path: "/{id}/stages/reorder",
+  method: "put",
+  security: [{ Bearer: [] }],
+  request: {
+    params: applicationParamsSchema,
+    body: jsonContentRequired(
+      reorderStagesBodySchema,
+      "Payload containing stage IDs in desired order"
+    ),
+  },
+  responses: {
+    [StatusCodes.OK as 200]: jsonContent(
+      z.array(selectApplicationStageSchema),
+      "List of stages in updated order"
+    ),
+    [StatusCodes.BAD_REQUEST as 400]: jsonContent(
+      createMessageObjectSchema("Invalid stage IDs"),
+      "Bad request error"
+    ),
+    [StatusCodes.NOT_FOUND as 404]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.NOT_FOUND),
+      "Application not found"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(reorderStagesBodySchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
+      "The unauthorized error"
+    ),
+  },
+});
+
 export type ListStagesRoute = typeof listStages;
 export type CreateStageRoute = typeof createStage;
 export type PatchStageRoute = typeof patchStage;
 export type RemoveStageRoute = typeof removeStage;
+export type ReorderStageRoute = typeof reorderStages;

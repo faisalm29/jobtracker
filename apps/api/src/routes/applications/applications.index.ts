@@ -16,6 +16,7 @@ const router = createRouter()
   .openapi(stageRoutes.listStages, stageHandlers.listStages)
   .openapi(stageRoutes.createStage, stageHandlers.createStage)
   .openapi(stageRoutes.patchStage, stageHandlers.patchStage)
-  .openapi(stageRoutes.removeStage, stageHandlers.removeStage);
+  .openapi(stageRoutes.removeStage, stageHandlers.removeStage)
+  .openapi(stageRoutes.reorderStages, stageHandlers.reorderStages);
 
 export default router;
