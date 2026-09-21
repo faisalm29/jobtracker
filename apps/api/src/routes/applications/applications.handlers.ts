@@ -4,11 +4,23 @@ import {
   GetOneRoute,
   ListRoute,
   PatchRoute,
+  RemoveRoute,
+  RestoreRoute,
 } from "./applications.routes";
 import { getSession } from "@/lib/get-session";
 import { createDb } from "@/db";
 import { applications, applicationStatusHistory } from "@/db/schema";
-import { and, asc, count, desc, eq, isNull, like, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  isNotNull,
+  isNull,
+  like,
+  or,
+} from "drizzle-orm";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 export const list: AppRouteHandler<ListRoute> = async (c) => {
@@ -199,4 +211,66 @@ export const patch: AppRouteHandler<PatchRoute> = async (c) => {
     .returning();
 
   return c.json(updatedApplication, 200);
+};
+
+export const remove: AppRouteHandler<RemoveRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id } = c.req.valid("param");
+
+  const [deletedApplication] = await db
+    .update(applications)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(applications.userId, user.id),
+        eq(applications.id, id),
+        isNull(applications.deletedAt)
+      )
+    )
+    .returning();
+
+  if (!deletedApplication) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  return c.body(null, StatusCodes.NO_CONTENT);
+};
+
+export const restore: AppRouteHandler<RestoreRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id } = c.req.valid("param");
+
+  const [restoredApplication] = await db
+    .update(applications)
+    .set({
+      deletedAt: null,
+    })
+    .where(
+      and(
+        eq(applications.userId, user.id),
+        eq(applications.id, id),
+        isNotNull(applications.deletedAt)
+      )
+    )
+    .returning();
+
+  if (!restoredApplication) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  return c.json(restoredApplication, 200);
 };
