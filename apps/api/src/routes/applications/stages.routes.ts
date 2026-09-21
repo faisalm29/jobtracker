@@ -106,6 +106,34 @@ export const patchStage = createRoute({
   },
 });
 
+export const removeStage = createRoute({
+  tags,
+  path: "/{id}/stages/{stageId}",
+  method: "delete",
+  security: [{ Bearer: [] }],
+  request: {
+    params: stageParamsSchema,
+  },
+  responses: {
+    [StatusCodes.NO_CONTENT as 204]: {
+      description: "Application stage deleted",
+    },
+    [StatusCodes.NOT_FOUND as 404]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.NOT_FOUND),
+      "Not found error"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(stageParamsSchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
+      createMessageObjectSchema("Unauthorized"),
+      "The unauthorized error"
+    ),
+  },
+});
+
 export type ListStagesRoute = typeof listStages;
 export type CreateStageRoute = typeof createStage;
 export type PatchStageRoute = typeof patchStage;
+export type RemoveStageRoute = typeof removeStage;

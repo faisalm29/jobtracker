@@ -3,6 +3,7 @@ import {
   CreateStageRoute,
   ListStagesRoute,
   PatchStageRoute,
+  RemoveStageRoute,
 } from "./stages.routes";
 import { createDb } from "@/db";
 import { getSession } from "@/lib/get-session";
@@ -168,4 +169,50 @@ export const patchStage: AppRouteHandler<PatchStageRoute> = async (c) => {
   }
 
   return c.json(updatedStage, StatusCodes.OK);
+};
+
+export const removeStage: AppRouteHandler<RemoveStageRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id, stageId } = c.req.valid("param");
+
+  // 1. Verify parent application exists and belongs to the authenticated user
+  const application = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.id, id),
+      eq(applications.userId, user.id),
+      isNull(applications.deletedAt)
+    ),
+  });
+
+  if (!application) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  // Perform delete
+  const [deletedStage] = await db
+    .delete(applicationsStages)
+    .where(
+      and(
+        eq(applicationsStages.applicationId, id),
+        eq(applicationsStages.id, stageId)
+      )
+    )
+    .returning();
+
+  if (!deletedStage) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  return c.body(null, StatusCodes.NO_CONTENT);
 };

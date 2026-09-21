@@ -15,6 +15,7 @@ const router = createRouter()
   // Stage endpoints
   .openapi(stageRoutes.listStages, stageHandlers.listStages)
   .openapi(stageRoutes.createStage, stageHandlers.createStage)
-  .openapi(stageRoutes.patchStage, stageHandlers.patchStage);
+  .openapi(stageRoutes.patchStage, stageHandlers.patchStage)
+  .openapi(stageRoutes.removeStage, stageHandlers.removeStage);
 
 export default router;
