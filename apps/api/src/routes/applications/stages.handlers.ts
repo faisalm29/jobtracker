@@ -1,5 +1,9 @@
 import { AppRouteHandler } from "@/lib/types";
-import { CreateStageRoute, ListStagesRoute } from "./stages.routes";
+import {
+  CreateStageRoute,
+  ListStagesRoute,
+  PatchStageRoute,
+} from "./stages.routes";
 import { createDb } from "@/db";
 import { getSession } from "@/lib/get-session";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
@@ -93,4 +97,75 @@ export const createStage: AppRouteHandler<CreateStageRoute> = async (c) => {
     .returning();
 
   return c.json(newStage, StatusCodes.CREATED);
+};
+
+export const patchStage: AppRouteHandler<PatchStageRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { id, stageId } = c.req.valid("param");
+  const updates = c.req.valid("json");
+
+  // 1. Check if there are no updates provided
+  if (Object.keys(updates).length === 0) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          issues: [
+            {
+              code: "invalid_updates",
+              path: [],
+              message: "No updates provided",
+            },
+          ],
+          name: "ZodError",
+        },
+      },
+      StatusCodes.UNPROCESSABLE_ENTITY
+    );
+  }
+
+  // 2. Verify parent application exists and belongs to the authenticated user
+  const application = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.id, id),
+      eq(applications.userId, user.id),
+      isNull(applications.deletedAt)
+    ),
+  });
+
+  if (!application) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  // 3. Perform update
+  const [updatedStage] = await db
+    .update(applicationsStages)
+    .set({
+      ...updates,
+    })
+    .where(
+      and(
+        eq(applicationsStages.applicationId, id),
+        eq(applicationsStages.id, stageId)
+      )
+    )
+    .returning();
+
+  // 4. Verify stage was found and updated
+  if (!updatedStage) {
+    return c.json(
+      {
+        message: ReasonPhrases.NOT_FOUND,
+      },
+      StatusCodes.NOT_FOUND
+    );
+  }
+
+  return c.json(updatedStage, StatusCodes.OK);
 };

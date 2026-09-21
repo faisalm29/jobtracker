@@ -12,6 +12,12 @@ export const applicationParamsSchema = z.object({
   }),
 });
 
+// Route params: /applications/:id/stages/stageId
+export const stageParamsSchema = z.object({
+  id: z.string().openapi({ description: "Application ID" }),
+  stageId: z.string().openapi({ description: "Stage ID" }),
+});
+
 // Request body: POST /applications (client doesn't send id, userId, or timestamps)
 export const createApplicationBodySchema = insertApplicationSchema
   .omit({
@@ -45,6 +51,9 @@ export const createStageBodySchema = insertApplicationStageSchema
     description: "Payload for creating a new stage",
   });
 
+export const updateStageBodySchema = createStageBodySchema.partial();
+
 export type CreateApplicationBody = z.infer<typeof createApplicationBodySchema>;
 export type UpdateApplicationBody = z.infer<typeof updateApplicationBodySchema>;
 export type CreateStageBody = z.infer<typeof createStageBodySchema>;
+export type UpdateStageBody = z.infer<typeof updateStageBodySchema>;

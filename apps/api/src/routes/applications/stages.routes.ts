@@ -6,6 +6,8 @@ import { jsonContentRequired } from "@/lib/json-content-required";
 import {
   applicationParamsSchema,
   createStageBodySchema,
+  stageParamsSchema,
+  updateStageBodySchema,
 } from "@/validators/application-validator";
 import { createRoute, z } from "@hono/zod-openapi";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
@@ -72,5 +74,38 @@ export const createStage = createRoute({
   },
 });
 
+export const patchStage = createRoute({
+  tags,
+  path: "/{id}/stages/{stageId}",
+  method: "patch",
+  security: [{ Bearer: [] }],
+  request: {
+    params: stageParamsSchema,
+    body: jsonContentRequired(
+      updateStageBodySchema,
+      "Payload for updating the application stage"
+    ),
+  },
+  responses: {
+    [StatusCodes.OK as 200]: jsonContent(
+      selectApplicationStageSchema,
+      "The updated application stage"
+    ),
+    [StatusCodes.NOT_FOUND as 404]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.NOT_FOUND),
+      "Not found error"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(updateStageBodySchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
+      createMessageObjectSchema("Unauthorized"),
+      "The unauthorized error"
+    ),
+  },
+});
+
 export type ListStagesRoute = typeof listStages;
 export type CreateStageRoute = typeof createStage;
+export type PatchStageRoute = typeof patchStage;
