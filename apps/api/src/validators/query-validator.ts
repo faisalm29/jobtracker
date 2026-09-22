@@ -9,19 +9,35 @@ import {
 
 export const getApplicationsQuerySchema = z.object({
   // SEARCH & FILTER
-  search: z.string().optional().openapi({
+  search: z.string().trim().max(100).optional().openapi({
     description: "Search keyword matching companyName or roleTitle",
     example: "Google",
   }),
-  status: z.enum(APPLICATION_STATUSES).optional().openapi({
-    description: "Filter by application status",
-    example: "applied",
-  }),
+  status: z
+    .preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          // Splits "applied,in_progress" into ["applied", "in_progress"]
+          return val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+        return val;
+      },
+      z.array(z.enum(APPLICATION_STATUSES))
+    )
+    .optional()
+    .openapi({
+      type: "string",
+      description: `Filter by one or more statuses (comma-separated, e.g. applied,in_progress). Allowed: ${APPLICATION_STATUSES.join(", ")}`,
+      example: "applied,in_progress",
+    }),
   sourceCategory: z.enum(SOURCE_CATEGORIES).optional().openapi({
     description: "Filter by source category",
     example: "job_board",
   }),
-  sourceName: z.string().optional().openapi({
+  sourceName: z.string().trim().max(100).optional().openapi({
     description: "Filter by specific source name (eg. LinkedIn, Indeed)",
     example: "LinkedIn",
   }),
@@ -39,9 +55,28 @@ export const getApplicationsQuerySchema = z.object({
       return val;
     }, z.boolean().optional().default(false))
     .openapi({
+      type: "boolean",
       description: "Include soft-deleted applications",
+      example: false,
     }),
 
+  // DATE RANGE
+  appliedFrom: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.date().optional().openapi({
+      description:
+        "Filter applications applied on or after this date (ISO 8601 or YYYY-MM-DD)",
+      example: "2026-01-01",
+    })
+  ),
+  appliedTo: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.date().optional().openapi({
+      description:
+        "Filter applications applied on or before this date (ISO 8601 or YYYY-MM-DD)",
+      example: "2026-03-31",
+    })
+  ),
   // SORTING
   sortBy: z
     .enum([
@@ -83,7 +118,7 @@ export const getApplicationsQuerySchema = z.object({
 
 export const paginationMetaSchema = z.object({
   page: z.number().openapi({ example: 1 }),
-  limit: z.number().openapi({ example: 1 }),
+  limit: z.number().openapi({ example: 20 }),
   totalItems: z.number().openapi({ example: 45 }),
   totalPages: z.number().openapi({ example: 3 }),
   hasNextPage: z.boolean().openapi({ example: true }),

@@ -5,11 +5,12 @@ import {
   selectApplicationStageSchema,
   selectApplicationStatusHistorySchema,
 } from "@/db/schema";
+import { optionalDate } from "@/lib/optional-date";
 import { z } from "@hono/zod-openapi";
 
 // Route params: /applications/:id
 export const applicationParamsSchema = z.object({
-  id: z.string().openapi({
+  id: z.uuid().openapi({
     description: "Application ID",
     example: "123e4567-e89b-12d3-a456-426614174000",
   }),
@@ -17,8 +18,14 @@ export const applicationParamsSchema = z.object({
 
 // Route params: /applications/:id/stages/stageId
 export const stageParamsSchema = z.object({
-  id: z.string().openapi({ description: "Application ID" }),
-  stageId: z.string().openapi({ description: "Stage ID" }),
+  id: z.uuid().openapi({
+    description: "Application ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
+  }),
+  stageId: z.uuid().openapi({
+    description: "Stage ID",
+    example: "123e4567-e89b-12d3-a456-426614174000",
+  }),
 });
 
 // Request body: POST /applications (client doesn't send id, userId, or timestamps)
@@ -32,13 +39,34 @@ export const createApplicationBodySchema = insertApplicationSchema
     statusChangedAt: true,
   })
   .extend({
-    appliedDate: z.coerce.date().nullish(),
-    deadline: z.coerce.date().nullish(),
+    companyName: z.string().trim().min(1, "Company name is required").max(150),
+    roleTitle: z.string().trim().min(1, "Role title is required").max(150),
+    salary: z
+      .number()
+      .int()
+      .nonnegative("Salary cannot be negative")
+      .max(100_000_000_000)
+      .nullish(),
+    currency: z.string().trim().min(1).max(10).default("Rp"),
+    jobUrl: z
+      .url("Invalid job URL")
+      .max(2048)
+      .nullish()
+      .or(z.literal(""))
+      .transform((val) => (val === "" ? null : val)),
+    sourceName: z.string().trim().max(100).nullish(),
+    location: z.string().trim().max(200).nullish(),
+    notes: z.string().max(10000).nullish(),
+    appliedDate: optionalDate,
+    deadline: optionalDate,
   });
 
 // Request body: PATCH /applications/:id
-export const updateApplicationBodySchema =
-  createApplicationBodySchema.partial();
+export const updateApplicationBodySchema = createApplicationBodySchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update",
+  });
 
 // Stage validators
 export const createStageBodySchema = insertApplicationStageSchema
@@ -48,17 +76,21 @@ export const createStageBodySchema = insertApplicationStageSchema
     applicationId: true,
   })
   .extend({
-    scheduledAt: z.coerce.date().nullish(),
-  })
-  .openapi({
-    description: "Payload for creating a new stage",
+    name: z.string().trim().min(1, "Stage name is required").max(100),
+    orderIndex: z.number().int().min(0).optional(),
+    notes: z.string().max(5000).nullish(),
+    scheduledAt: optionalDate,
   });
 
-export const updateStageBodySchema = createStageBodySchema.partial();
+export const updateStageBodySchema = createStageBodySchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update",
+  });
 
 export const reorderStagesBodySchema = z.object({
   stageIds: z
-    .array(z.string())
+    .array(z.uuid())
     .min(1)
     .refine((items) => new Set(items).size === items.length, {
       message: "Stage IDs must be unique",

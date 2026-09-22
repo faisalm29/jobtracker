@@ -36,7 +36,7 @@ export const list = createRoute({
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
-      createMessageObjectSchema("Unauthorized"),
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
       "The unauthorized error"
     ),
   },

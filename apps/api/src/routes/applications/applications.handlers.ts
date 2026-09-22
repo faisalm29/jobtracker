@@ -16,12 +16,18 @@ import {
   count,
   desc,
   eq,
+  gte,
+  inArray,
   isNotNull,
   isNull,
   like,
+  lt,
   or,
+  sql,
+  SQL,
 } from "drizzle-orm";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export const list: AppRouteHandler<ListRoute> = async (c) => {
   const db = createDb(c.env);
@@ -37,14 +43,18 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
   }
 
   // 3. Optional filters
-  if (query.status) {
-    conditions.push(eq(applications.status, query.status));
+  if (query.status && query.status.length > 0) {
+    if (query.status.length === 1) {
+      conditions.push(eq(applications.status, query.status[0]));
+    } else {
+      conditions.push(inArray(applications.status, query.status));
+    }
   }
   if (query.sourceCategory) {
     conditions.push(eq(applications.sourceCategory, query.sourceCategory));
   }
   if (query.sourceName) {
-    conditions.push(like(applications.sourceName, `%${query.sourceName}%`));
+    conditions.push(likeWithEscape(applications.sourceName, query.sourceName));
   }
   if (query.jobType) {
     conditions.push(eq(applications.jobType, query.jobType));
@@ -55,10 +65,22 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
   if (query.search) {
     conditions.push(
       or(
-        like(applications.companyName, `%${query.search}%`),
-        like(applications.roleTitle, `%${query.search}%`)
+        likeWithEscape(applications.companyName, query.search),
+        likeWithEscape(applications.roleTitle, query.search)
       )!
     );
+  }
+  // Date range filter
+  if (query.appliedFrom) {
+    conditions.push(gte(applications.appliedDate, query.appliedFrom));
+  }
+
+  if (query.appliedTo) {
+    // If a user passes "2026-03-31", JS parses it as 00:00:00 UTC.
+    // Set to start of the next day at 00:00:00 so all applications on the day before included:
+    const endOfDay = new Date(query.appliedTo);
+    endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+    conditions.push(lt(applications.appliedDate, endOfDay));
   }
 
   const whereClause = and(...conditions);
@@ -173,25 +195,6 @@ export const patch: AppRouteHandler<PatchRoute> = async (c) => {
   const { id } = c.req.valid("param");
   const updates = c.req.valid("json");
 
-  if (Object.keys(updates).length === 0) {
-    return c.json(
-      {
-        success: false,
-        error: {
-          issues: [
-            {
-              code: "invalid_updates",
-              path: [],
-              message: "No updates provided",
-            },
-          ],
-          name: "ZodError",
-        },
-      },
-      StatusCodes.UNPROCESSABLE_ENTITY
-    );
-  }
-
   const existing = await db.query.applications.findFirst({
     where: and(
       eq(applications.userId, user.id),
@@ -212,22 +215,42 @@ export const patch: AppRouteHandler<PatchRoute> = async (c) => {
   const hasStatusChanged = updates.status && updates.status !== existing.status;
 
   if (hasStatusChanged) {
-    await db.insert(applicationStatusHistory).values({
-      id: crypto.randomUUID(),
-      applicationId: id,
-      fromStatus: existing.status,
-      toStatus: updates.status!,
-      changedAt: new Date(),
-    });
+    const [[updatedApplication]] = await db.batch([
+      db
+        .update(applications)
+        .set({
+          ...updates,
+          statusChangedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(applications.id, id),
+            eq(applications.userId, user.id),
+            isNull(applications.deletedAt)
+          )
+        )
+        .returning(),
+      db.insert(applicationStatusHistory).values({
+        id: crypto.randomUUID(),
+        applicationId: id,
+        fromStatus: existing.status,
+        toStatus: updates.status!,
+        changedAt: new Date(),
+      }),
+    ]);
+    return c.json(updatedApplication, StatusCodes.OK);
   }
 
   const [updatedApplication] = await db
     .update(applications)
-    .set({
-      ...updates,
-      ...(hasStatusChanged ? { statusChangedAt: new Date() } : {}),
-    })
-    .where(and(eq(applications.id, id), eq(applications.userId, user.id)))
+    .set(updates)
+    .where(
+      and(
+        eq(applications.id, id),
+        eq(applications.userId, user.id),
+        isNull(applications.deletedAt)
+      )
+    )
     .returning();
 
   return c.json(updatedApplication, StatusCodes.OK);
@@ -294,3 +317,8 @@ export const restore: AppRouteHandler<RestoreRoute> = async (c) => {
 
   return c.json(restoredApplication, StatusCodes.OK);
 };
+
+function likeWithEscape(column: SQLiteColumn, searchTerm: string): SQL {
+  const escaped = searchTerm.replace(/[%_\\]/g, "\\$&");
+  return sql`${column} LIKE ${`%${escaped}%`} ESCAPE '\\'`;
+}

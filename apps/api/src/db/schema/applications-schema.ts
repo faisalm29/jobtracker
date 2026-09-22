@@ -15,7 +15,9 @@ import {
 export const applications = sqliteTable(
   "applications",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -48,15 +50,28 @@ export const applications = sqliteTable(
     deletedAt: integer("deleted_at", { mode: "timestamp" }),
   },
   (table) => [
-    index("applications_user_id_idx").on(table.userId),
-    index("applications_status_idx").on(table.userId, table.status),
+    // Covers the default list query: WHERE userId = ? AND deletedAt IS NULL ORDER BY appliedDate
+    index("applications_user_deleted_date_idx").on(
+      table.userId,
+      table.deletedAt,
+      table.appliedDate
+    ),
+
+    // Covers status-filtered queries: WHERE userId = ? AND deletedAt IS NULL AND status = ?
+    index("applications_user_deleted_status_idx").on(
+      table.userId,
+      table.deletedAt,
+      table.status
+    ),
   ]
 );
 
 export const applicationsStages = sqliteTable(
   "application_stages",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     applicationId: text("application_id")
       .notNull()
       .references(() => applications.id, { onDelete: "cascade" }),
@@ -71,14 +86,25 @@ export const applicationsStages = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
   },
-  (table) => [index("application_stages_app_id_idx").on(table.applicationId)]
+  (table) => [
+    index("application_stages_app_order_idx").on(
+      table.applicationId,
+      table.orderIndex
+    ),
+  ]
 );
 
 export const applicationStatusHistory = sqliteTable(
   "application_status_history",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     applicationId: text("application_id")
       .notNull()
       .references(() => applications.id, { onDelete: "cascade" }),
@@ -89,8 +115,11 @@ export const applicationStatusHistory = sqliteTable(
       .default(sql`(unixepoch())`),
   },
   (table) => [
-    index("status_history_application_id_idx").on(table.applicationId),
     index("status_history_changed_at_idx").on(table.changedAt),
+    index("status_history_app_changed_idx").on(
+      table.applicationId,
+      table.changedAt
+    ),
   ]
 );
 

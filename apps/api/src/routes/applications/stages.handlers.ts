@@ -107,27 +107,7 @@ export const patchStage: AppRouteHandler<PatchStageRoute> = async (c) => {
   const { id, stageId } = c.req.valid("param");
   const updates = c.req.valid("json");
 
-  // 1. Check if there are no updates provided
-  if (Object.keys(updates).length === 0) {
-    return c.json(
-      {
-        success: false,
-        error: {
-          issues: [
-            {
-              code: "invalid_updates",
-              path: [],
-              message: "No updates provided",
-            },
-          ],
-          name: "ZodError",
-        },
-      },
-      StatusCodes.UNPROCESSABLE_ENTITY
-    );
-  }
-
-  // 2. Verify parent application exists and belongs to the authenticated user
+  // 1. Verify parent application exists and belongs to the authenticated user
   const application = await db.query.applications.findFirst({
     where: and(
       eq(applications.id, id),
@@ -145,7 +125,7 @@ export const patchStage: AppRouteHandler<PatchStageRoute> = async (c) => {
     );
   }
 
-  // 3. Perform update
+  // 2. Perform update
   const [updatedStage] = await db
     .update(applicationsStages)
     .set({
@@ -159,7 +139,7 @@ export const patchStage: AppRouteHandler<PatchStageRoute> = async (c) => {
     )
     .returning();
 
-  // 4. Verify stage was found and updated
+  // 3. Verify stage was found and updated
   if (!updatedStage) {
     return c.json(
       {
@@ -252,7 +232,7 @@ export const reorderStages: AppRouteHandler<ReorderStageRoute> = async (c) => {
   const allBelongToApp = stageIds.every((stageId) =>
     existingStageIdSet.has(stageId)
   );
-  if (!allBelongToApp) {
+  if (!allBelongToApp || stageIds.length !== existingStages.length) {
     return c.json(
       { message: "One or more stage IDs do not belong to this application" },
       StatusCodes.BAD_REQUEST
