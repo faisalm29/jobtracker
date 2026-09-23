@@ -1,9 +1,20 @@
 import { AppRouteHandler } from "@/lib/types";
-import { StatsRoute } from "./dashboard.routes";
+import { StatsRoute, UpcomingRoute } from "./dashboard.routes";
 import { createDb } from "@/db";
 import { getSession } from "@/lib/get-session";
 import { applications, applicationsStages } from "@/db/schema";
-import { and, count, eq, gte, isNull, lt } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  sql,
+} from "drizzle-orm";
 import { StatusCodes } from "http-status-codes";
 
 export const stats: AppRouteHandler<StatsRoute> = async (c) => {
@@ -124,6 +135,90 @@ export const stats: AppRouteHandler<StatsRoute> = async (c) => {
         byJobType,
         byWorkplaceType,
       },
+    },
+    StatusCodes.OK
+  );
+};
+
+export const upcoming: AppRouteHandler<UpcomingRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { days, limit } = c.req.valid("query");
+
+  const now = new Date();
+  const futureLimit = new Date();
+  futureLimit.setUTCDate(futureLimit.getUTCDate() + days);
+  futureLimit.setUTCHours(23, 59, 59, 999);
+
+  const [rawInterviews, rawDeadlines] = await Promise.all([
+    // 1. Upcoming Interviews
+    db
+      .select({
+        id: applicationsStages.id,
+        applicationId: applicationsStages.applicationId,
+        companyName: applications.companyName,
+        roleTitle: applications.roleTitle,
+        stageName: applicationsStages.name,
+        stageType: applicationsStages.type,
+        scheduledAt: applicationsStages.scheduledAt,
+        notes: applicationsStages.notes,
+      })
+      .from(applicationsStages)
+      .innerJoin(
+        applications,
+        eq(applicationsStages.applicationId, applications.id)
+      )
+      .where(
+        and(
+          eq(applications.userId, user.id),
+          isNull(applications.deletedAt),
+          eq(applicationsStages.status, "scheduled"),
+          isNotNull(applicationsStages.scheduledAt),
+          gte(applicationsStages.scheduledAt, now),
+          lte(applicationsStages.scheduledAt, futureLimit)
+        )
+      )
+      .orderBy(asc(applicationsStages.scheduledAt))
+      .limit(limit),
+
+    // 2. Approaching Deadlines
+    db
+      .select({
+        id: applications.id,
+        companyName: applications.companyName,
+        roleTitle: applications.roleTitle,
+        status: applications.status,
+        deadline: applications.deadline,
+      })
+      .from(applications)
+      .where(
+        and(
+          eq(applications.userId, user.id),
+          isNull(applications.deletedAt),
+          eq(applications.status, "saved"),
+          isNotNull(applications.deadline),
+          gte(applications.deadline, now),
+          lte(applications.deadline, futureLimit)
+        )
+      )
+      .orderBy(asc(applications.deadline))
+      .limit(limit),
+  ]);
+
+  const interviews = rawInterviews.map((item) => ({
+    ...item,
+    scheduledAt: item.scheduledAt as Date,
+  }));
+
+  const deadlines = rawDeadlines.map((item) => ({
+    ...item,
+    deadline: item.deadline as Date,
+  }));
+
+  return c.json(
+    {
+      interviews,
+      deadlines,
     },
     StatusCodes.OK
   );

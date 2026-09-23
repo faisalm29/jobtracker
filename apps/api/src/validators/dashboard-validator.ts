@@ -3,6 +3,7 @@ import {
   APPLICATION_STATUSES,
   JOB_TYPES,
   SOURCE_CATEGORIES,
+  STAGE_TYPES,
   WORKPLACE_TYPES,
 } from "@jobtracker/constants";
 
@@ -72,8 +73,65 @@ export const dashboardStatsQuerySchema = z.object({
   ),
 });
 
+export const dashboardUpcomingQuerySchema = z.object({
+  days: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(90)
+    .optional()
+    .default(14)
+    .openapi({
+      description: "Number of days to look ahead",
+      example: 14,
+    }),
+  limit: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(50)
+    .optional()
+    .default(5)
+    .openapi({
+      description: "Maximum number of items to return per section",
+      example: 5,
+    }),
+});
+
+export const dashboardUpcomingResponseSchema = z.object({
+  interviews: z.array(
+    z.object({
+      id: z.uuid(), // using stage id
+      applicationId: z.uuid(),
+      companyName: z.string(),
+      roleTitle: z.string(),
+      stageName: z.string(),
+      stageType: z.enum(STAGE_TYPES),
+      scheduledAt: z.date(),
+      notes: z.string().nullable(),
+    })
+  ),
+  deadlines: z.array(
+    z.object({
+      id: z.uuid(), // using application id
+      companyName: z.string(),
+      roleTitle: z.string(),
+      status: z.enum(APPLICATION_STATUSES),
+      deadline: z.date(),
+    })
+  ),
+});
+
 export type DashboardStatsResponse = z.infer<
   typeof dashboardStatsResponseSchema
 >;
 
 export type DashboardStatsQuery = z.infer<typeof dashboardStatsQuerySchema>;
+
+export type DashboardUpcomingResponse = z.infer<
+  typeof dashboardUpcomingResponseSchema
+>;
+
+export type DashboardUpcomingQuery = z.infer<
+  typeof dashboardUpcomingQuerySchema
+>;
