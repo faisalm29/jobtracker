@@ -12,13 +12,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jobtracker/api": "workspace:*",
     "@jobtracker/constants": "workspace:*",
     "@jobtracker/ui": "workspace:*",
     "@tanstack/react-router": "^1.170.38",
     "@tanstack/react-router-devtools": "^1.167.2",
     "lucide-react": "^1.47.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "hono": "^4.13.8"
   },
   "devDependencies": {
     "@eslint/js": "^10",
