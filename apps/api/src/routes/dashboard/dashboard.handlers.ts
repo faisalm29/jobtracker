@@ -1,21 +1,31 @@
 import { AppRouteHandler } from "@/lib/types";
-import { StatsRoute, UpcomingRoute } from "./dashboard.routes";
+import {
+  RecentActivityRoute,
+  StatsRoute,
+  TimelineRoute,
+  UpcomingRoute,
+} from "./dashboard.routes";
 import { createDb } from "@/db";
 import { getSession } from "@/lib/get-session";
-import { applications, applicationsStages } from "@/db/schema";
+import {
+  applications,
+  applicationsStages,
+  applicationStatusHistory,
+} from "@/db/schema";
 import {
   and,
   asc,
   count,
+  desc,
   eq,
   gte,
   isNotNull,
   isNull,
   lt,
   lte,
-  sql,
 } from "drizzle-orm";
 import { StatusCodes } from "http-status-codes";
+import { getISOWeek } from "@/lib/get-iso-week";
 
 export const stats: AppRouteHandler<StatsRoute> = async (c) => {
   const db = createDb(c.env);
@@ -219,6 +229,286 @@ export const upcoming: AppRouteHandler<UpcomingRoute> = async (c) => {
     {
       interviews,
       deadlines,
+    },
+    StatusCodes.OK
+  );
+};
+
+export const timeline: AppRouteHandler<TimelineRoute> = async (c) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { weeks, months } = c.req.valid("query");
+
+  const now = new Date();
+
+  // 1. Generate zero-filled weekly buckets (Monday to Sunday)
+  const currentMonday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+  const dayOfWeek = currentMonday.getUTCDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  currentMonday.setUTCDate(currentMonday.getUTCDate() + diffToMonday);
+  currentMonday.setUTCHours(0, 0, 0, 0);
+
+  const weeklyBuckets: Array<{
+    period: string;
+    label: string;
+    start: Date;
+    end: Date;
+    applied: number;
+    statusChanges: number;
+  }> = [];
+
+  for (let i = weeks - 1; i >= 0; i--) {
+    const startOfWeek = new Date(currentMonday);
+    startOfWeek.setUTCDate(startOfWeek.getUTCDate() - i * 7);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 6);
+    endOfWeek.setUTCHours(23, 59, 59, 999);
+
+    const weekNum = String(getISOWeek(startOfWeek)).padStart(2, "0");
+    const period = `${startOfWeek.getUTCFullYear()}-W${weekNum}`;
+
+    const startLabel = startOfWeek.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+    const endLabel = endOfWeek.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+
+    weeklyBuckets.push({
+      period,
+      label: `${startLabel} - ${endLabel}`,
+      start: startOfWeek,
+      end: endOfWeek,
+      applied: 0,
+      statusChanges: 0,
+    });
+  }
+
+  // 2. Generate zero-filled monthly buckets
+  const monthlyBuckets: Array<{
+    period: string;
+    label: string;
+    start: Date;
+    end: Date;
+    applied: number;
+    statusChanges: number;
+  }> = [];
+
+  for (let i = months - 1; i >= 0; i--) {
+    const startOfMonth = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1, 0, 0, 0, 0)
+    );
+    const endOfMonth = new Date(
+      Date.UTC(
+        startOfMonth.getUTCFullYear(),
+        startOfMonth.getUTCMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      )
+    );
+
+    const monthNum = String(startOfMonth.getUTCMonth() + 1).padStart(2, "0");
+    const period = `${startOfMonth.getUTCFullYear()}-${monthNum}`;
+    const label = startOfMonth.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+    monthlyBuckets.push({
+      period,
+      label,
+      start: startOfMonth,
+      end: endOfMonth,
+      applied: 0,
+      statusChanges: 0,
+    });
+  }
+
+  // 3. Find the earliest start date between weekly and monthly ranges
+  const earliestDate =
+    weeklyBuckets[0].start < monthlyBuckets[0].start
+      ? weeklyBuckets[0].start
+      : monthlyBuckets[0].start;
+
+  // 4. Run queries concurrently
+  const [rawApplications, rawStatusHistory] = await Promise.all([
+    // A. Applications applied in this window
+    db
+      .select({
+        appliedDate: applications.appliedDate,
+      })
+      .from(applications)
+      .where(
+        and(
+          eq(applications.userId, user.id),
+          isNull(applications.deletedAt),
+          isNotNull(applications.appliedDate),
+          gte(applications.appliedDate, earliestDate)
+        )
+      ),
+
+    // B. Status changes in this window
+    db
+      .select({
+        changedAt: applicationStatusHistory.changedAt,
+      })
+      .from(applicationStatusHistory)
+      .innerJoin(
+        applications,
+        eq(applicationStatusHistory.applicationId, applications.id)
+      )
+      .where(
+        and(
+          eq(applications.userId, user.id),
+          isNull(applications.deletedAt),
+          gte(applicationStatusHistory.changedAt, earliestDate)
+        )
+      ),
+  ]);
+
+  // 5. Aggregate applications count into weekly & monthly buckets
+  for (const app of rawApplications) {
+    if (!app.appliedDate) continue;
+    const time = app.appliedDate.getTime();
+
+    for (const week of weeklyBuckets) {
+      if (time >= week.start.getTime() && time <= week.end.getTime()) {
+        week.applied++;
+        break;
+      }
+    }
+
+    for (const month of monthlyBuckets) {
+      if (time >= month.start.getTime() && time <= month.end.getTime()) {
+        month.applied++;
+        break;
+      }
+    }
+  }
+
+  // 6. Aggregate status changes into weekly & monthly buckets
+  for (const history of rawStatusHistory) {
+    const time = history.changedAt.getTime();
+
+    for (const week of weeklyBuckets) {
+      if (time >= week.start.getTime() && time <= week.end.getTime()) {
+        week.statusChanges++;
+        break;
+      }
+    }
+
+    for (const month of monthlyBuckets) {
+      if (time >= month.start.getTime() && time <= month.end.getTime()) {
+        month.statusChanges++;
+        break;
+      }
+    }
+  }
+
+  // 7. Strip out internal start/end Date objects before returning
+  const weekly = weeklyBuckets.map(
+    ({ period, label, applied, statusChanges }) => ({
+      period,
+      label,
+      applied,
+      statusChanges,
+    })
+  );
+
+  const monthly = monthlyBuckets.map(
+    ({ period, label, applied, statusChanges }) => ({
+      period,
+      label,
+      applied,
+      statusChanges,
+    })
+  );
+
+  return c.json(
+    {
+      timeline: {
+        weekly,
+        monthly,
+      },
+    },
+    StatusCodes.OK
+  );
+};
+
+export const recentActivity: AppRouteHandler<RecentActivityRoute> = async (
+  c
+) => {
+  const db = createDb(c.env);
+  const user = getSession(c).user;
+  const { limit, page } = c.req.valid("query");
+
+  const whereClause = and(
+    eq(applications.userId, user.id),
+    isNull(applications.deletedAt)
+  );
+
+  const offset = (page - 1) * limit;
+
+  const [recentActivity, [{ totalItems }]] = await Promise.all([
+    // 1. Fetch paginated recent activity feed
+    db
+      .select({
+        id: applicationStatusHistory.id,
+        applicationId: applications.id,
+        companyName: applications.companyName,
+        roleTitle: applications.roleTitle,
+        fromStatus: applicationStatusHistory.fromStatus,
+        toStatus: applicationStatusHistory.toStatus,
+        changedAt: applicationStatusHistory.changedAt,
+      })
+      .from(applicationStatusHistory)
+      .innerJoin(
+        applications,
+        eq(applicationStatusHistory.applicationId, applications.id)
+      )
+      .where(whereClause)
+      .orderBy(desc(applicationStatusHistory.changedAt))
+      .limit(limit)
+      .offset(offset),
+
+    // 2. Count total activity items for accurate pagination
+    db
+      .select({
+        totalItems: count(),
+      })
+      .from(applicationStatusHistory)
+      .innerJoin(
+        applications,
+        eq(applicationStatusHistory.applicationId, applications.id)
+      )
+      .where(whereClause),
+  ]);
+
+  // 3. Calculate total pages
+  const totalPages = Math.ceil(totalItems / limit) || 1;
+
+  return c.json(
+    {
+      data: recentActivity,
+      pagination: {
+        page: page,
+        limit: limit,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     },
     StatusCodes.OK
   );
