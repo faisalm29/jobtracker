@@ -22,6 +22,7 @@ const createApp = () => {
 
   app.use("*", attachSession);
   app.use("/applications/*", requireAuth);
+  app.use("/dashboard/*", requireAuth);
 
   app.on(["POST", "GET"], "/api/auth/*", (c) =>
     createAuth(c.env).handler(c.req.raw)
