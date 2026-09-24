@@ -2,8 +2,12 @@ import { createErrorSchema } from "@/lib/create-error-schema";
 import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
 import {
+  dashboardRecentActivityQuerySchema,
+  dashboardRecentActivityResponseSchema,
   dashboardStatsQuerySchema,
   dashboardStatsResponseSchema,
+  dashboardTimelineQuerySchema,
+  dashboardTimelineResponseSchema,
   dashboardUpcomingQuerySchema,
   dashboardUpcomingResponseSchema,
 } from "@/validators/dashboard-validator";
@@ -60,5 +64,55 @@ export const upcoming = createRoute({
   },
 });
 
+export const timeline = createRoute({
+  tags,
+  path: "/timeline",
+  method: "get",
+  security: [{ Bearer: [] }],
+  request: {
+    query: dashboardTimelineQuerySchema,
+  },
+  responses: {
+    [StatusCodes.OK as 200]: jsonContent(
+      dashboardTimelineResponseSchema,
+      "The returned timeline (weekly and monthly) and recent activity"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(dashboardTimelineQuerySchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
+      "The unauthorized error"
+    ),
+  },
+});
+
+export const recentActivity = createRoute({
+  tags,
+  path: "/recent-activity",
+  method: "get",
+  security: [{ Bearer: [] }],
+  request: {
+    query: dashboardRecentActivityQuerySchema,
+  },
+  responses: {
+    [StatusCodes.OK as 200]: jsonContent(
+      dashboardRecentActivityResponseSchema,
+      "The returned recent activity"
+    ),
+    [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
+      createErrorSchema(dashboardRecentActivityQuerySchema),
+      "The validation error(s)"
+    ),
+    [StatusCodes.UNAUTHORIZED]: jsonContent(
+      createMessageObjectSchema(ReasonPhrases.UNAUTHORIZED),
+      "The unauthorized error"
+    ),
+  },
+});
+
 export type StatsRoute = typeof stats;
 export type UpcomingRoute = typeof upcoming;
+export type TimelineRoute = typeof timeline;
+export type RecentActivityRoute = typeof recentActivity;
