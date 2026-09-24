@@ -7,10 +7,19 @@
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "typecheck": "tsc --noEmit",
+    "build": "pnpm run build:client",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply faisalownedjobtracker --local",
     "db:migrate:remote": "wrangler d1 migrations apply faisalownedjobtracker --remote",
-    "db:migrate": "wrangler d1 migrations apply faisalownedjobtracker --local"
+    "db:migrate": "wrangler d1 migrations apply faisalownedjobtracker --local",
+    "build:client": "tsup src/client.ts --format esm --dts --clean --out-dir dist",
+    "dev:client": "tsup src/client.ts --format esm --dts --watch --out-dir dist"
+  },
+  "exports": {
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    }
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.3",
@@ -27,6 +36,7 @@
     "@types/node": "^24.13.3",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "tsup": "^8.5.1",
     "typescript": "~6",
     "wrangler": "^4.110.0"
   }
