@@ -48,12 +48,10 @@ export const createApplicationBodySchema = insertApplicationSchema
       .max(100_000_000_000)
       .nullish(),
     currency: z.string().trim().min(1).max(10).default("Rp"),
-    jobUrl: z
-      .url("Invalid job URL")
-      .max(2048)
-      .nullish()
-      .or(z.literal(""))
-      .transform((val) => (val === "" ? null : val)),
+    jobUrl: z.preprocess(
+      (val: string | null | undefined) => (val === "" ? null : val),
+      z.url("Invalid job URL").max(2048).nullish()
+    ),
     sourceName: z.string().trim().max(100).nullish(),
     location: z.string().trim().max(200).nullish(),
     notes: z.string().max(10000).nullish(),
@@ -110,7 +108,12 @@ export const applicationDetailResponseSchema = selectApplicationSchema.extend({
   statusHistory: z.array(selectApplicationStatusHistorySchema),
 });
 
+// what the server receives after zod parses/defaults/transform
 export type CreateApplicationBody = z.infer<typeof createApplicationBodySchema>;
+// What clients send in the request body
+export type CreateApplicationInput = z.input<
+  typeof createApplicationBodySchema
+>;
 export type UpdateApplicationBody = z.infer<typeof updateApplicationBodySchema>;
 export type CreateStageBody = z.infer<typeof createStageBodySchema>;
 export type UpdateStageBody = z.infer<typeof updateStageBodySchema>;
