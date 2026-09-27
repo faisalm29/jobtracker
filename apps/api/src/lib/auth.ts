@@ -17,6 +17,7 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     "http://localhost:5173",
+    "http://localhost:4173",
     "https://faisalownedjobtracker.pages.dev",
   ],
   plugins: [bearer(), openAPI()],
@@ -35,6 +36,7 @@ export const createAuth = (env: AppEnv["Bindings"]) => {
     },
     trustedOrigins: [
       "http://localhost:5173",
+      "http://localhost:4173",
       "https://faisalownedjobtracker.pages.dev",
     ],
     plugins: [bearer(), openAPI()],

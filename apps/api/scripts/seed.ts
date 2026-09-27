@@ -1,6 +1,6 @@
 import { hcWithType } from "../src/client";
 import { config } from "dotenv";
-import { CreateApplicationInput } from "../src/validators/application-validator";
+import { CreateApplicationInput } from "@/lib/schema/application";
 
 config({
   path: ".dev.vars",

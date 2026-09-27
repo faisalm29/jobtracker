@@ -1,15 +1,17 @@
-import { selectApplicationStageSchema } from "@/db/schema";
 import { createErrorSchema } from "@/lib/create-error-schema";
 import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
 import { jsonContentRequired } from "@/lib/json-content-required";
 import {
+  applicationStageSchema,
+  createApplicationStageSchema,
+  updateApplicationStageSchema,
+  reorderApplicationStagesSchema,
+} from "@/lib/schema/application-stage";
+import {
   applicationParamsSchema,
-  createStageBodySchema,
-  reorderStagesBodySchema,
-  stageParamsSchema,
-  updateStageBodySchema,
-} from "@/validators/application-validator";
+  applicationStageParamsSchema,
+} from "@/lib/schema/params";
 import { createRoute, z } from "@hono/zod-openapi";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
@@ -25,7 +27,7 @@ export const listStages = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      z.array(selectApplicationStageSchema),
+      z.array(applicationStageSchema),
       "List of stages for the application"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
@@ -51,13 +53,13 @@ export const createStage = createRoute({
   request: {
     params: applicationParamsSchema,
     body: jsonContentRequired(
-      createStageBodySchema,
+      createApplicationStageSchema,
       "Payload for creating a new application stage"
     ),
   },
   responses: {
     [StatusCodes.CREATED as 201]: jsonContent(
-      selectApplicationStageSchema,
+      applicationStageSchema,
       "The created stage"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
@@ -65,7 +67,7 @@ export const createStage = createRoute({
       "Application not found"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(createStageBodySchema),
+      createErrorSchema(createApplicationStageSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -81,15 +83,15 @@ export const patchStage = createRoute({
   method: "patch",
   security: [{ Bearer: [] }],
   request: {
-    params: stageParamsSchema,
+    params: applicationStageParamsSchema,
     body: jsonContentRequired(
-      updateStageBodySchema,
+      updateApplicationStageSchema,
       "Payload for updating the application stage"
     ),
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      selectApplicationStageSchema,
+      applicationStageSchema,
       "The updated application stage"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
@@ -97,7 +99,7 @@ export const patchStage = createRoute({
       "Not found error"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(updateStageBodySchema),
+      createErrorSchema(updateApplicationStageSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -113,7 +115,7 @@ export const removeStage = createRoute({
   method: "delete",
   security: [{ Bearer: [] }],
   request: {
-    params: stageParamsSchema,
+    params: applicationStageParamsSchema,
   },
   responses: {
     [StatusCodes.NO_CONTENT as 204]: {
@@ -124,7 +126,7 @@ export const removeStage = createRoute({
       "Not found error"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(stageParamsSchema),
+      createErrorSchema(applicationStageParamsSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -142,13 +144,13 @@ export const reorderStages = createRoute({
   request: {
     params: applicationParamsSchema,
     body: jsonContentRequired(
-      reorderStagesBodySchema,
+      reorderApplicationStagesSchema,
       "Payload containing stage IDs in desired order"
     ),
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      z.array(selectApplicationStageSchema),
+      z.array(applicationStageSchema),
       "List of stages in updated order"
     ),
     [StatusCodes.BAD_REQUEST as 400]: jsonContent(
@@ -160,7 +162,7 @@ export const reorderStages = createRoute({
       "Application not found"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(reorderStagesBodySchema),
+      createErrorSchema(reorderApplicationStagesSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(

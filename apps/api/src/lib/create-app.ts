@@ -12,6 +12,7 @@ const createApp = () => {
     cors({
       origin: [
         "http://localhost:5173",
+        "http://localhost:4173",
         "https://faisalownedjobtracker.pages.dev",
       ],
       allowHeaders: ["Content-Type", "Authorization"],

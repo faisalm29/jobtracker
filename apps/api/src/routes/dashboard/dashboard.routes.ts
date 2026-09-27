@@ -2,15 +2,17 @@ import { createErrorSchema } from "@/lib/create-error-schema";
 import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
 import {
+  dashboardRecentActivitySchema,
+  dashboardStatsSchema,
+  dashboardTimelineSchema,
+  dashboardUpcomingSchema,
+} from "@/lib/schema/dashboard";
+import {
   dashboardRecentActivityQuerySchema,
-  dashboardRecentActivityResponseSchema,
   dashboardStatsQuerySchema,
-  dashboardStatsResponseSchema,
   dashboardTimelineQuerySchema,
-  dashboardTimelineResponseSchema,
   dashboardUpcomingQuerySchema,
-  dashboardUpcomingResponseSchema,
-} from "@/validators/dashboard-validator";
+} from "@/lib/schema/query";
 import { createRoute } from "@hono/zod-openapi";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
@@ -26,7 +28,7 @@ export const stats = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      dashboardStatsResponseSchema,
+      dashboardStatsSchema,
       "The returned stats"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
@@ -50,7 +52,7 @@ export const upcoming = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      dashboardUpcomingResponseSchema,
+      dashboardUpcomingSchema,
       "The returned scheduled interviews and approaching deadlines"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
@@ -74,7 +76,7 @@ export const timeline = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      dashboardTimelineResponseSchema,
+      dashboardTimelineSchema,
       "The returned timeline (weekly and monthly) and recent activity"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
@@ -98,7 +100,7 @@ export const recentActivity = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      dashboardRecentActivityResponseSchema,
+      dashboardRecentActivitySchema,
       "The returned recent activity"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(

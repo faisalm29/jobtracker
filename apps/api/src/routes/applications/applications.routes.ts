@@ -1,19 +1,17 @@
-import { selectApplicationSchema } from "@/db/schema";
 import { createErrorSchema } from "@/lib/create-error-schema";
 import { createMessageObjectSchema } from "@/lib/create-message-object-schema";
 import { jsonContent } from "@/lib/json-content";
 import { jsonContentRequired } from "@/lib/json-content-required";
 import {
-  applicationDetailResponseSchema,
-  applicationParamsSchema,
-  createApplicationBodySchema,
-  updateApplicationBodySchema,
-} from "@/validators/application-validator";
-import {
-  getApplicationsQuerySchema,
-  paginatedApplicationsResponseSchema,
-} from "@/validators/query-validator";
-import { createRoute, z } from "@hono/zod-openapi";
+  applicationSchema,
+  createApplicationSchema,
+  updateApplicationSchema,
+  applicationDetailSchema,
+  paginatedApplicationsSchema,
+} from "@/lib/schema/application";
+import { applicationsQuerySchema } from "@/lib/schema/query";
+import { applicationParamsSchema } from "@/lib/schema/params";
+import { createRoute } from "@hono/zod-openapi";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 const tags = ["Applications"];
@@ -24,15 +22,15 @@ export const list = createRoute({
   method: "get",
   security: [{ Bearer: [] }],
   request: {
-    query: getApplicationsQuerySchema,
+    query: applicationsQuerySchema,
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      paginatedApplicationsResponseSchema,
+      paginatedApplicationsSchema,
       "List of applications with pagination"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(getApplicationsQuerySchema),
+      createErrorSchema(applicationsQuerySchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -52,7 +50,7 @@ export const getOne = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      applicationDetailResponseSchema,
+      applicationDetailSchema,
       "The application details with stages and status history"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
@@ -77,17 +75,17 @@ export const create = createRoute({
   security: [{ Bearer: [] }],
   request: {
     body: jsonContentRequired(
-      createApplicationBodySchema,
+      createApplicationSchema,
       "Payload for creating a new application"
     ),
   },
   responses: {
     [StatusCodes.CREATED as 201]: jsonContent(
-      selectApplicationSchema,
+      applicationSchema,
       "The created application"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(createApplicationBodySchema),
+      createErrorSchema(createApplicationSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -105,13 +103,13 @@ export const patch = createRoute({
   request: {
     params: applicationParamsSchema,
     body: jsonContentRequired(
-      updateApplicationBodySchema,
+      updateApplicationSchema,
       "Payload for updating the application"
     ),
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      selectApplicationSchema,
+      applicationSchema,
       "The updated application"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
@@ -119,7 +117,7 @@ export const patch = createRoute({
       "Not found error"
     ),
     [StatusCodes.UNPROCESSABLE_ENTITY as 422]: jsonContent(
-      createErrorSchema(updateApplicationBodySchema),
+      createErrorSchema(updateApplicationSchema),
       "The validation error(s)"
     ),
     [StatusCodes.UNAUTHORIZED as 401]: jsonContent(
@@ -166,7 +164,7 @@ export const restore = createRoute({
   },
   responses: {
     [StatusCodes.OK as 200]: jsonContent(
-      selectApplicationSchema,
+      applicationSchema,
       "The restored application"
     ),
     [StatusCodes.NOT_FOUND as 404]: jsonContent(
