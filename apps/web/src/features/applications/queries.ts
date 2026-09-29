@@ -16,3 +16,21 @@ export const applicationsQueryOptions = (filters?: { status?: string }) =>
       return res.json();
     },
   });
+
+export const applicationDetailQueryOptions = (id: string) =>
+  queryOptions({
+    queryKey: ["applications", id],
+    queryFn: async () => {
+      const res = await apiClient.applications[":id"].$get({
+        param: {
+          id,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to load application: ${res.statusText} `);
+      }
+
+      return res.json();
+    },
+  });

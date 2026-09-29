@@ -1,13 +1,6 @@
+import { AppBreadcrumbs } from "@/components/AppBreadcrumbs";
 import { AppSidebar } from "@/components/AppSidebar";
 import { authClient } from "@/lib/auth-client";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage,
-} from "@jobtracker/ui/components/breadcrumb";
 import { Separator } from "@jobtracker/ui/components/separator";
 import {
   SidebarInset,
@@ -20,17 +13,10 @@ import {
   Outlet,
   redirect,
   useRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 import { ChartNoAxesCombined } from "lucide-react";
 import { useState } from "react";
-
-const nav = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: ChartNoAxesCombined,
-  },
-];
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
@@ -54,11 +40,27 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
+const nav = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: ChartNoAxesCombined,
+  },
+];
+
+// // Label dictionary for custom friendly breadcrumb names
+// const ROUTE_LABELS: Record<string, string> = {
+//   dashboard: "Dashboard",
+//   applications: "Applications",
+//   account: "Account"
+// }
+
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -75,7 +77,13 @@ function AuthenticatedLayout() {
   };
   return (
     <SidebarProvider>
-      <AppSidebar nav={nav} user={user} onLogout={handleLogout} />
+      <AppSidebar
+        nav={nav}
+        user={user}
+        onLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+        pathname={pathname}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
@@ -83,17 +91,38 @@ function AuthenticatedLayout() {
             orientation="vertical"
             className="my-auto mr-2 data-[orientation=vertical]:h-4"
           />
-          <Breadcrumb>
+          {/* <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Build Your Application</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-              </BreadcrumbItem>
+              {segments.map((segment, index) => {
+                const isLast = index === segments.length - 1;
+                const href = "/" + segments.slice(0, index + 1).join("/");
+
+                return (
+                  <Fragment key={href}>
+                    <BreadcrumbItem className="hidden md:block">
+                      {isLast ? (
+                        <BreadcrumbPage className="capitalize">
+                          {segment}
+                        </BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink
+                          render={
+                            <Link to={href} className="capitalize">
+                              {segment}
+                            </Link>
+                          }
+                        />
+                      )}
+                    </BreadcrumbItem>
+                    {!isLast && (
+                      <BreadcrumbSeparator className="hidden md:block" />
+                    )}
+                  </Fragment>
+                );
+              })}
             </BreadcrumbList>
-          </Breadcrumb>
+          </Breadcrumb> */}
+          <AppBreadcrumbs />
         </header>
         <main>
           <Outlet />

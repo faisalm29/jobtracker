@@ -17,9 +17,15 @@ interface NavMainProps extends React.ComponentProps<typeof SidebarGroup> {
     url: string;
     icon?: LucideIcon;
   }[];
+  pathname?: string;
 }
 
-export const NavMain = ({ nav, className, ...props }: NavMainProps) => {
+export const NavMain = ({
+  nav,
+  pathname,
+  className,
+  ...props
+}: NavMainProps) => {
   return (
     <SidebarGroup className={cn(className)} {...props}>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -27,6 +33,7 @@ export const NavMain = ({ nav, className, ...props }: NavMainProps) => {
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               tooltip="Applications"
+              isActive={pathname === "/applications"}
               render={
                 <Link to="/applications">
                   <Briefcase />
@@ -49,6 +56,7 @@ export const NavMain = ({ nav, className, ...props }: NavMainProps) => {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.title}
+                isActive={pathname === item.url}
                 render={
                   <Link to={item.url}>
                     {item.icon && <item.icon />}

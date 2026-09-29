@@ -13,6 +13,9 @@ export const Route = createFileRoute("/_authenticated/applications/")({
 
     return res.json();
   },
+  staticData: {
+    breadcrumb: "Applications",
+  },
   component: ApplicationsPage,
 });
 

@@ -20,13 +20,8 @@ import {
   useSidebar,
 } from "@jobtracker/ui/components/sidebar";
 import { cn } from "@jobtracker/ui/lib/utils";
-import {
-  Bell,
-  CreditCard,
-  EllipsisVertical,
-  LogOut,
-  UserCircle,
-} from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { EllipsisVertical, LogOut, UserCircle } from "lucide-react";
 import type React from "react";
 
 interface NavUserProps extends React.ComponentProps<typeof SidebarMenu> {
@@ -36,11 +31,13 @@ interface NavUserProps extends React.ComponentProps<typeof SidebarMenu> {
     image?: string | null;
   };
   onLogout?: () => void;
+  isLoggingOut?: boolean;
 }
 
 export const NavUser = ({
   user,
   onLogout,
+  isLoggingOut = false,
   className,
   ...props
 }: NavUserProps) => {
@@ -102,23 +99,22 @@ export const NavUser = ({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={
+                  <Link to="/account">
+                    <UserCircle />
+                    Account
+                  </Link>
+                }
+              />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout}>
+            <DropdownMenuItem
+              onClick={isLoggingOut ? undefined : onLogout}
+              disabled={isLoggingOut}
+            >
               <LogOut />
-              Log out
+              {isLoggingOut ? "Logging out..." : "Log out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

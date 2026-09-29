@@ -23,12 +23,16 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     image?: string | null;
   };
   onLogout?: () => void;
+  isLoggingOut?: boolean;
+  pathname?: string;
 }
 
 export const AppSidebar = ({
   nav,
   user,
   onLogout,
+  isLoggingOut,
+  pathname,
   className,
   ...props
 }: AppSidebarProps) => {
@@ -39,11 +43,11 @@ export const AppSidebar = ({
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain nav={nav} />
+        <NavMain nav={nav} pathname={pathname} />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={user} onLogout={onLogout} />
+        <NavUser user={user} onLogout={onLogout} isLoggingOut={isLoggingOut} />
       </SidebarFooter>
     </Sidebar>
   );
