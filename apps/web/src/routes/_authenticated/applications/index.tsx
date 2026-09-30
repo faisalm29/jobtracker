@@ -1,17 +1,13 @@
-import { apiClient } from "@/lib/api-client";
+import { applicationsQueryOptions } from "@/features/applications/queries";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/applications/")({
-  loader: async () => {
-    const res = await apiClient.applications.$get({
-      query: {},
+  loader: ({ context: { queryClient } }) => {
+    return queryClient.query({
+      ...applicationsQueryOptions(),
+      staleTime: "static",
     });
-
-    if (!res.ok) {
-      throw Error(res.statusText);
-    }
-
-    return res.json();
   },
   staticData: {
     breadcrumb: "Applications",
@@ -20,13 +16,13 @@ export const Route = createFileRoute("/_authenticated/applications/")({
 });
 
 function ApplicationsPage() {
-  const { data } = Route.useLoaderData();
+  const { data: response } = useSuspenseQuery(applicationsQueryOptions());
   return (
     <>
       <h1>Applications</h1>
       <div>
         <ul>
-          {data.map((app) => (
+          {response.data.map((app) => (
             <li>{app.companyName}</li>
           ))}
         </ul>
