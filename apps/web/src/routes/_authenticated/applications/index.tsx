@@ -13,10 +13,10 @@ export const Route = createFileRoute("/_authenticated/applications/")({
 
     return res.json();
   },
-  component: RouteComponent,
+  component: ApplicationsPage,
 });
 
-function RouteComponent() {
+function ApplicationsPage() {
   const { data } = Route.useLoaderData();
   return (
     <>
