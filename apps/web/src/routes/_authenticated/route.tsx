@@ -1,5 +1,10 @@
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@jobtracker/ui/components/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { authClient } from "@/lib/auth-client";
-import { Button } from "@jobtracker/ui/components/button";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -7,7 +12,10 @@ import {
   redirect,
   useRouter,
 } from "@tanstack/react-router";
+import { ChartNoAxesCombined } from "lucide-react";
 import { useState } from "react";
+import { Separator } from "@jobtracker/ui/components/separator";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
@@ -31,6 +39,14 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
+const nav = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: ChartNoAxesCombined,
+  },
+];
+
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const router = useRouter();
@@ -51,17 +67,26 @@ function AuthenticatedLayout() {
     }
   };
   return (
-    <>
-      <div>Login as {user.name}</div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-      >
-        {isLoggingOut ? "Logging out..." : "Logout"}
-      </Button>
-      <Outlet />
-    </>
+    <SidebarProvider>
+      <AppSidebar
+        nav={nav}
+        user={user}
+        onLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+      />
+      <div>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="my-auto mr-2 data-[orientation=vertical]:h-4"
+          />
+          <AppBreadcrumb />
+        </header>
+        <SidebarInset>
+          <Outlet />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
