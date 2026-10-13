@@ -9,7 +9,9 @@
       "@/*": ["./src/*"],
       "@jobtracker/ui/*": ["../../packages/ui/src/*"],
       "@jobtracker/constants": ["../../packages/constants/src/index.ts"],
-      "@jobtracker/constants/*": ["../../packages/constants/src/*"]
+      "@jobtracker/constants/*": ["../../packages/constants/src/*"],
+      "@jobtracker/schemas": ["../../packages/schemas/src/index.ts"],
+      "@jobtracker/schemas/*": ["../../packages/schemas/src/*"]
     }
   }
 }

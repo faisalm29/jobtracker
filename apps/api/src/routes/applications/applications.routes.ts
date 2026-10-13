@@ -4,13 +4,13 @@ import { jsonContent } from "@/lib/json-content";
 import { jsonContentRequired } from "@/lib/json-content-required";
 import {
   applicationSchema,
+  paginatedApplicationsSchema,
   createApplicationSchema,
   updateApplicationSchema,
+  applicationsQuerySchema,
+  applicationParamsSchema,
   applicationDetailSchema,
-  paginatedApplicationsSchema,
-} from "@/lib/schema/application";
-import { applicationsQuerySchema } from "@/lib/schema/query";
-import { applicationParamsSchema } from "@/lib/schema/params";
+} from "@jobtracker/schemas";
 import { createRoute } from "@hono/zod-openapi";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 

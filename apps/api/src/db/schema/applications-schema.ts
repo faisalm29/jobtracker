@@ -76,7 +76,7 @@ export const applicationsStages = sqliteTable(
       .notNull()
       .references(() => applications.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    type: text("type", { enum: STAGE_TYPES }).notNull().default("other"),
+    type: text("type", { enum: STAGE_TYPES }),
     status: text("status", { enum: STAGE_STATUSES })
       .notNull()
       .default("pending"),

@@ -12,7 +12,6 @@ import { Fragment } from "react";
 
 export const AppBreadcrumb = () => {
   const matches = useMatches();
-  console.log(matches);
 
   const breadcrumbs: BreadcrumbItemData[] = [];
 

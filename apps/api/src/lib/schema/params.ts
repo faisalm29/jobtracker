@@ -21,4 +21,6 @@ export const applicationStageParamsSchema = applicationParamsSchema
   .openapi("applicationStageParams");
 
 export type ApplicationParams = z.infer<typeof applicationParamsSchema>;
-export type StageParams = z.infer<typeof applicationStageParamsSchema>;
+export type ApplicationStageParams = z.infer<
+  typeof applicationStageParamsSchema
+>;

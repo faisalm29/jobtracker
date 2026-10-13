@@ -24,6 +24,7 @@
   "dependencies": {
     "@hono/zod-openapi": "^1.6.3",
     "@jobtracker/constants": "workspace:*",
+    "@jobtracker/schemas": "workspace:*",
     "@scalar/hono-api-reference": "^0.12.2",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2",

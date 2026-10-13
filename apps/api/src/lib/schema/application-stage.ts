@@ -19,8 +19,8 @@ export const applicationStageSchema = z
     scheduledAt: optionalDate,
     orderIndex: z.number().int().min(0).default(0),
     notes: z.string().max(5000).nullish(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
+    createdAt: z.coerce.date<string | Date | undefined>(),
+    updatedAt: z.coerce.date<string | Date | undefined>(),
   })
   .openapi("ApplicationStage");
 

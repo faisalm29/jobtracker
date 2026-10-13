@@ -7,9 +7,13 @@ export const applicationStatusHistorySchema = z
     applicationId: z
       .uuid()
       .openapi({ example: "123e4567-e89b-12d3-a456-426614174000" }),
-    fromStatus: z.enum(APPLICATION_STATUSES).nullish(),
+    fromStatus: z.enum(APPLICATION_STATUSES).nullable(),
     toStatus: z.enum(APPLICATION_STATUSES),
-    changedAt: z.coerce.date(),
+    changedAt: z.coerce.date<string | Date | undefined>().openapi({
+      description:
+        "Filter applications applied on or after this date (ISO 8601 or YYYY-MM-DD)",
+      example: "2026-01-01",
+    }),
   })
   .openapi("ApplicationStatusHistory");
 

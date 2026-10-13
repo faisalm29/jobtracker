@@ -46,9 +46,9 @@ export const applicationSchema = z
     deadline: optionalDate,
     notes: z.string().max(10000).nullish(),
     appliedDate: optionalDate,
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
-    statusChangedAt: z.coerce.date(),
+    createdAt: z.coerce.date<string | Date | undefined>(),
+    updatedAt: z.coerce.date<string | Date | undefined>(),
+    statusChangedAt: z.coerce.date<string | Date | undefined>(),
     deletedAt: optionalDate,
   })
   .openapi("Application");

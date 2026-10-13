@@ -20,7 +20,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lt,
   or,
   sql,
@@ -28,6 +27,7 @@ import {
 } from "drizzle-orm";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
+import { convertDate } from "@/lib/convert-date";
 
 export const list: AppRouteHandler<ListRoute> = async (c) => {
   const db = createDb(c.env);
@@ -72,7 +72,9 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
   }
   // Date range filter
   if (query.appliedFrom) {
-    conditions.push(gte(applications.appliedDate, query.appliedFrom));
+    conditions.push(
+      gte(applications.appliedDate, convertDate(query.appliedFrom))
+    );
   }
 
   if (query.appliedTo) {

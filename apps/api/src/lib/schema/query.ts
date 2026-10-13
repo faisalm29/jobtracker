@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import {
   APPLICATION_STATUSES,
+  type ApplicationStatus,
   JOB_TYPES,
   SOURCE_CATEGORIES,
   WORKPLACE_TYPES,
@@ -15,7 +16,14 @@ export const applicationsQuerySchema = z
     }),
     status: z
       .preprocess(
-        (val) => {
+        (
+          val:
+            | ApplicationStatus
+            | ApplicationStatus[]
+            | string
+            | string[]
+            | undefined
+        ) => {
           if (typeof val === "string") {
             // Splits "applied,in_progress" into ["applied", "in_progress"]
             return val
@@ -62,16 +70,16 @@ export const applicationsQuerySchema = z
 
     // DATE RANGE
     appliedFrom: z.preprocess(
-      (val) => (val === "" ? undefined : val),
-      z.coerce.date().optional().openapi({
+      (val: string | Date | undefined) => (val === "" ? undefined : val),
+      z.coerce.date<string | Date | undefined>().optional().openapi({
         description:
           "Filter applications applied on or after this date (ISO 8601 or YYYY-MM-DD)",
         example: "2026-01-01",
       })
     ),
     appliedTo: z.preprocess(
-      (val) => (val === "" ? undefined : val),
-      z.coerce.date().optional().openapi({
+      (val: string | Date | undefined) => (val === "" ? undefined : val),
+      z.coerce.date<string | Date | undefined>().optional().openapi({
         description:
           "Filter applications applied on or before this date (ISO 8601 or YYYY-MM-DD)",
         example: "2026-03-31",
@@ -99,12 +107,18 @@ export const applicationsQuerySchema = z
     }),
 
     // PAGINATION
-    page: z.coerce.number().int().positive().optional().default(1).openapi({
-      description: "Page number (1-based)",
-      example: 1,
-    }),
+    page: z.coerce
+      .number<string | number | undefined>()
+      .int()
+      .positive()
+      .optional()
+      .default(1)
+      .openapi({
+        description: "Page number (1-based)",
+        example: 1,
+      }),
     limit: z.coerce
-      .number()
+      .number<string | number | undefined>()
       .int()
       .positive()
       .max(100)
@@ -120,16 +134,16 @@ export const applicationsQuerySchema = z
 export const dashboardStatsQuerySchema = z
   .object({
     appliedFrom: z.preprocess(
-      (val) => (val === "" ? undefined : val),
-      z.coerce.date().optional().openapi({
+      (val: string | Date | undefined) => (val === "" ? undefined : val),
+      z.coerce.date<string | Date | undefined>().optional().openapi({
         description:
           "Filter applications applied on or after this date (ISO 8601 or YYYY-MM-DD)",
         example: "2026-01-01",
       })
     ),
     appliedTo: z.preprocess(
-      (val) => (val === "" ? undefined : val),
-      z.coerce.date().optional().openapi({
+      (val: string | Date | undefined) => (val === "" ? undefined : val),
+      z.coerce.date<string | Date | undefined>().optional().openapi({
         description:
           "Filter applications applied on or before this date (ISO 8601 or YYYY-MM-DD)",
         example: "2026-03-31",
@@ -141,7 +155,7 @@ export const dashboardStatsQuerySchema = z
 export const dashboardUpcomingQuerySchema = z
   .object({
     days: z.coerce
-      .number()
+      .number<string | Date | undefined>()
       .int()
       .positive()
       .max(90)
@@ -152,7 +166,7 @@ export const dashboardUpcomingQuerySchema = z
         example: 14,
       }),
     limit: z.coerce
-      .number()
+      .number<string | number | undefined>()
       .int()
       .positive()
       .max(50)
@@ -168,7 +182,7 @@ export const dashboardUpcomingQuerySchema = z
 export const dashboardTimelineQuerySchema = z
   .object({
     weeks: z.coerce
-      .number()
+      .number<string | number | undefined>()
       .int()
       .positive()
       .max(52)
@@ -179,7 +193,7 @@ export const dashboardTimelineQuerySchema = z
         example: 12,
       }),
     months: z.coerce
-      .number()
+      .number<string | number | undefined>()
       .int()
       .positive()
       .max(24)
@@ -194,12 +208,18 @@ export const dashboardTimelineQuerySchema = z
 
 export const dashboardRecentActivityQuerySchema = z
   .object({
-    page: z.coerce.number().int().positive().optional().default(1).openapi({
-      description: "Page number (1-based)",
-      example: 1,
-    }),
+    page: z.coerce
+      .number<string | number | undefined>()
+      .int()
+      .positive()
+      .optional()
+      .default(1)
+      .openapi({
+        description: "Page number (1-based)",
+        example: 1,
+      }),
     limit: z.coerce
-      .number()
+      .number<string | number | undefined>()
       .int()
       .positive()
       .max(50)

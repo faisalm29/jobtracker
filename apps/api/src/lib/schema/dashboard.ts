@@ -71,7 +71,7 @@ export const dashboardUpcomingSchema = z
         roleTitle: z.string(),
         stageName: z.string(),
         stageType: z.enum(STAGE_TYPES),
-        scheduledAt: z.coerce.date(),
+        scheduledAt: z.coerce.date<string | Date | undefined>(),
         notes: z.string().nullable(),
       })
     ),
@@ -81,7 +81,7 @@ export const dashboardUpcomingSchema = z
         companyName: z.string(),
         roleTitle: z.string(),
         status: z.enum(APPLICATION_STATUSES),
-        deadline: z.coerce.date(),
+        deadline: z.coerce.date<string | Date | undefined>(),
       })
     ),
   })
@@ -138,7 +138,7 @@ export const recentActivityItemSchema = z
       description: "New status",
       example: "in_progress",
     }),
-    changedAt: z.coerce.date().openapi({
+    changedAt: z.coerce.date<string | Date | undefined>().openapi({
       description: "Timestamp when the status changed",
     }),
   })
