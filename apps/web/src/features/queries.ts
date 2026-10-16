@@ -1,18 +1,12 @@
 import { apiClient } from "@/lib/api-client";
-import type { ApplicationsQuery } from "@jobtracker/schemas";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
-export const applicationsQueryOptions = (params?: ApplicationsQuery) =>
+export const applicationsQueryOptions = () =>
   queryOptions({
-    queryKey: ["applications", "list", params ?? {}],
+    queryKey: ["applications", "list"],
     queryFn: async () => {
       const res = await apiClient.applications.$get({
-        query: {
-          ...params,
-          status: Array.isArray(params?.status)
-            ? params.status.join(",")
-            : params?.status,
-        },
+        query: {},
       });
 
       if (!res.ok) {
